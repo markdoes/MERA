@@ -18,7 +18,7 @@ f = [2 8]';
 
 % mimic CPMG measurement in NMR with refocussing pulse angle theta (in
 % degrees)
-theta = 180;
+theta = 155;
 
 % samples in time are uniformly space (not a requirement for MERA) with
 % period TE
@@ -41,7 +41,7 @@ analysis.interactive = 'n';
 % transverse relaxation with imaging, where the RF transmit field likely
 % varies over the image field of view. This feature only works for 1D
 % signals.
-fitting.B1fit = 'n';
+fitting.B1fit = 'y';
 % If this option is used, you may choose a range and number of flip angles
 % (theta) to test. If you do not test a sufficient number or range, you may
 % not get the best fit. 
@@ -133,7 +133,7 @@ data = maketestdata1D(T2,f,t,theta,Ntrials,SNR);
 
 
 % loop through all regulatization types and fit data 
-regtyp_list = {'none','me','mc','upen','mg'run};
+regtyp_list = {'none','me','mc','upen','mg'};
 analysis.interactive = 'n';
 fitting.B1fit = 'y';
 analysis.graph = 'n';

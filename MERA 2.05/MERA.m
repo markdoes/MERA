@@ -1,7 +1,7 @@
 function [output,fitting,analysis] = MERA(data,fitting,analysis)
 % function [output] = MERA(DATA,FITTING,ANALYSIS)
 %
-% MERA version 2.05
+% MERA version 2.06
 % fits data in structure DATA with a distribution of decaying exponential
 % functions, subject to a non-negative constraint and other options as
 % defined in the structure FITTING. Output includes analysis of
@@ -66,6 +66,7 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 %   if FITTING.B1fit = 'y'
 %     FITTING.rangetheta: range of flip angles to test ([130 180])
 %     FITTING.numbertheta: number of flip angles to test (10)
+%     FITTING.fixedT1: the value to fix T1 for the EPG analysis (1)
 %     ** B1 fitting is not configured for two-dimensional fitting
 %     Note this option is only relevant to specific NMR measurements -- see
 %     references to background materials below.
@@ -200,6 +201,13 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 %   finally because the website that hosts MERA is going through a required
 %   address change, I figured it was time to move it to github. For this, a
 %   new version number!
+%
+% Version 2.06, 1 Aug 2018
+%   As an exercise to learn how to make code changes through github, I've
+%   added the option to constrain T1 when B1fit = 'y'. In cases of contrast
+%   agent loaded tissue samples, this might make a small difference in the
+%   fitted T2 spectrum, but in the vast majority of cases, it's unimportant
+%   see parameter fitting.fixedT1
 
 %% Acknowledgements/Contributions
 
@@ -689,7 +697,7 @@ end
         A(:,1:(K1-1)) = exp(-t*(1./fitting.T'));
       else
         for kt = 1:(K1-1)
-          A(:,kt)=EPGdecaycurve(th,fitting.T(kt),TE,N1);
+          A(:,kt)=EPGdecaycurve(th,fitting.T(kt),TE,N1,fitting.fixedT1);
         end
       end
       A(:,K1) = ones(N1,1);
@@ -722,10 +730,11 @@ end
       end
     end
     
-    function EchoAmp = EPGdecaycurve(theta,T2,TE,N)
+    function EchoAmp = EPGdecaycurve(theta,T2,TE,N,T1)
       % Assumes a CPMG condition -- see Hennig refs above
       % Arbitrarily set T1 = 1 s
-      T1 = 1;
+      % T1 = 1;
+      % version 2.06, added fitting.fixedT1, so T1 now set outside this func
       Nx = 2;
       Np = floor(N/Nx);
       
@@ -1354,9 +1363,9 @@ acceptablefittingfields = {'regtyp','regadj','numbergauss','widthgauss', ...
   'regweight','percentinc','rangeT','numberT','T','rangetheta',...
   'numbertheta','B1fit','nnlscode','twoD','rangeT2','numberT2','T2',...
   'theta_vector','theta_vector_fine','numberechoes',...
-  'numberechoes2','H','theta','T0gauss','numberT0','numbertrains'};
+  'numberechoes2','H','theta','T0gauss','numberT0','numbertrains','fixedT1'};
 defaultfittingvalue = {'mc','gcv',2,10,1e-1,1,[],100,[],[130 180],10, ...
-  'n','nnlsmex','n',[],35,[],[],[],[],[],[],[],[],1,[]};
+  'n','nnlsmex','n',[],35,[],[],[],[],[],[],[],[],1,[],1};
 defaultfitting =cell2struct(defaultfittingvalue,acceptablefittingfields,2);
 
 if (exist('fitting','var')==0 || isempty(fitting))
@@ -1526,6 +1535,16 @@ end
 theta = [];
 theta_vector = linspace(rangetheta(1),rangetheta(2),numbertheta);
 theta_vector_fine = linspace(rangetheta(1),rangetheta(2),100);
+
+if fittingflags(27)
+  fixedT1 = real(fitting.fixedT1);
+  if ~isscalar(fixedT1)||(fixedT1 < 0)
+    fixedT1 = defaultfitting.fixedT1;
+  end
+else
+  fixedT1 = defaultfitting.fixedT1;
+end
+
 
 if fittingflags(13)
   nnlscode = fitting.nnlscode;
@@ -1760,7 +1779,7 @@ fitting = struct('regtyp',regtyp,'regadj',regadj,'numbergauss',numbergauss, ...
   'nnlscode',nnlscode,'rangeT2',rangeT2,'numberT2',numberT2,'T2',T2,...
   'theta',theta,'T0gauss',T0gauss,'numberT0',numberT0,...
   'numberechoes',numberechoes,'numberechoes2',numberechoes2,...
-  'numbertrains',numbertrains);
+  'numbertrains',numbertrains,'fixedT1',fixedT1);
 
 data = struct('D',D,'t',t,'t2',t2);
 
