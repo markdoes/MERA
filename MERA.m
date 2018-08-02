@@ -208,6 +208,8 @@ function [output,fitting,analysis] = MERA(data,fitting,analysis)
 %   agent loaded tissue samples, this might make a small difference in the
 %   fitted T2 spectrum, but in the vast majority of cases, it's unimportant
 %   see parameter fitting.fixedT1
+%
+%   Also, %done display changed to steps of 10%
 
 %% Acknowledgements/Contributions
 
@@ -559,7 +561,7 @@ for i = 1:fitting.numbertrains
 %     waitbar(i/fitting.numbertrains,w,'Calculating ...');
 %   end
   % update waitbar
-  if strcmpi(analysis.interactive,'n')
+  if strcmpi(analysis.interactive,'n')&&~mod(i,fitting.numbertrains/10)
     fprintf('\b\b\b\b\b\b\b\b\b\b\b\b\b%3.0f %% done...',...
       i/fitting.numbertrains*100);
   end
